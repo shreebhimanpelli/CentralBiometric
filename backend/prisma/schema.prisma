@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  HOD
+  EVENT_COORDINATOR
+  STAFF
+  STUDENT
+}
+
+model Department {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  users     User[]
+  events    Event[]
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id                String             @id @default(cuid())
+  userId            String             @unique
+  passwordHash      String
+  name              String
+  role              Role
+  departmentId      String?
+  department        Department?        @relation(fields: [departmentId], references: [id])
+  punchLogs         PunchLog[]
+  eventAttendance   EventAttendance[]
+  coordinatedEvents EventCoordinator[]
+  refreshTokens     RefreshToken[]
+  createdAt         DateTime           @default(now())
+}
+
+model PunchLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  deviceId  String?
+  punchTime DateTime
+  direction String?
+  esslLogId String?  @unique
+  createdAt DateTime @default(now())
+
+  @@index([userId, punchTime])
+  @@index([punchTime])
+}
+
+model Event {
+  id           String             @id @default(cuid())
+  name         String
+  description  String?
+  startTime    DateTime
+  endTime      DateTime
+  departmentId String
+  department   Department         @relation(fields: [departmentId], references: [id])
+  coordinators EventCoordinator[]
+  attendance   EventAttendance[]
+  createdAt    DateTime           @default(now())
+
+  @@index([departmentId, startTime])
+}
+
+model EventCoordinator {
+  id      String @id @default(cuid())
+  eventId String
+  userId  String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user    User   @relation(fields: [userId], references: [id])
+
+  @@unique([eventId, userId])
+}
+
+model EventAttendance {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  punchTime DateTime
+  esslLogId String?  @unique
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([eventId, punchTime])
+  @@index([userId])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model SyncCursor {
+  id           String    @id @default("default")
+  lastSyncedAt DateTime?
+  lastEsslId   String?
+}
