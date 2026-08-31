@@ -97,71 +97,102 @@ h1, h2, h3, h4 {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 28rem;
+  max-width: 26rem;
   padding: 1.25rem;
 }
 
 .flame-login-card {
   position: relative;
   overflow: hidden;
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(16px);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  background: #ffffff;
   box-shadow:
     0 24px 48px rgba(10, 69, 111, 0.28),
-    0 8px 16px rgba(0, 0, 0, 0.12);
+    0 8px 20px rgba(0, 0, 0, 0.14);
 }
 
-.flame-login-card-accent {
+.flame-login-card::before {
+  content: "";
+  display: block;
   height: 4px;
   background: var(--flame-gradient);
 }
 
 .flame-login-card-header {
-  padding: 1.75rem 1.75rem 1.25rem;
+  padding: 1.5rem 1.5rem 1.25rem;
   text-align: center;
-  border-bottom: 1px solid rgba(10, 69, 111, 0.08);
-  background: linear-gradient(180deg, rgba(10, 69, 111, 0.04) 0%, transparent 100%);
+  border-bottom: 1px solid var(--border);
+  border-left: 4px solid var(--flame-blue);
+  background: linear-gradient(90deg, var(--flame-blue-soft) 0%, transparent 72%);
+}
+
+.flame-login-card-heading {
+  margin-top: 1rem;
 }
 
 .flame-login-title {
-  margin-top: 1rem;
   font-family: var(--font-headline);
   font-size: var(--text-2xl);
   font-weight: 700;
   color: var(--flame-blue);
   letter-spacing: -0.01em;
+  line-height: 1.25;
 }
 
 .flame-login-subtitle {
-  margin-top: 0.25rem;
+  margin-top: 0.375rem;
   font-size: var(--text-sm);
-  color: var(--flame-blue-muted);
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.flame-login-card-body {
+  padding: 1.5rem;
+  background: #ffffff;
 }
 
 .flame-login-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 1.5rem 1.75rem 1.75rem;
+}
+
+.flame-login-form .flame-label {
+  font-size: var(--text-sm);
+}
+
+.flame-login-form .flame-input {
+  background: #fafbfc;
+}
+
+.flame-login-form .flame-input:focus {
+  background: #ffffff;
+}
+
+.flame-login-form .flame-card[role="alert"] {
+  padding: 0.75rem 1rem;
+  font-size: var(--text-sm);
+  border-radius: 0.5rem;
 }
 
 .flame-login-submit {
   margin-top: 0.25rem;
   min-height: 3rem;
   font-size: var(--text-base);
-  box-shadow: 0 4px 14px rgba(10, 69, 111, 0.25);
+  box-shadow: 0 4px 14px rgba(10, 69, 111, 0.22);
 }
 
 .flame-login-submit:hover:not(:disabled) {
-  box-shadow: 0 6px 18px rgba(10, 69, 111, 0.32);
+  box-shadow: 0 6px 18px rgba(10, 69, 111, 0.3);
 }
 
 .flame-login-demo {
-  margin-top: 0.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid rgba(10, 69, 111, 0.1);
+  margin-top: 0.25rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--flame-blue-soft) 0%, #ffffff 100%);
 }
 
 .flame-login-demo-label {
@@ -171,34 +202,33 @@ h1, h2, h3, h4 {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--muted);
+  color: var(--flame-blue-muted);
 }
 
 .flame-login-demo-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
-  justify-content: center;
 }
 
 .flame-login-demo-btn {
-  min-height: 2.25rem;
-  padding: 0.375rem 0.75rem;
-  border-radius: 999px;
-  border: 1px solid rgba(10, 69, 111, 0.15);
-  background: rgba(255, 255, 255, 0.85);
+  min-height: 2.375rem;
+  padding: 0.4375rem 0.625rem;
+  border-radius: 0.4375rem;
+  border: 1px solid rgba(10, 69, 111, 0.18);
+  background: #ffffff;
   color: var(--flame-blue);
   font-size: var(--text-xs);
   font-weight: 600;
+  line-height: 1.3;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .flame-login-demo-btn:hover {
   background: var(--flame-orange-soft);
   border-color: rgba(245, 130, 32, 0.35);
   color: #a34d08;
-  transform: translateY(-1px);
 }
 
 .flame-login-footer {
@@ -206,20 +236,22 @@ h1, h2, h3, h4 {
   text-align: center;
   font-size: var(--text-xs);
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.82);
   letter-spacing: 0.02em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 @media (min-width: 640px) {
   .flame-login-content {
+    max-width: 28rem;
     padding: 2rem;
   }
 
   .flame-login-card-header {
-    padding: 2rem 2rem 1.5rem;
+    padding: 1.75rem 2rem 1.375rem;
   }
 
-  .flame-login-form {
+  .flame-login-card-body {
     padding: 1.75rem 2rem 2rem;
   }
 }

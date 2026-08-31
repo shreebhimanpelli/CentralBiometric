@@ -12,7 +12,6 @@ const DEMO_ACCOUNTS = [
   { userId: "EMP1001", password: "hod123", label: "HOD (CS)" },
   { userId: "EMP1003", password: "coord123", label: "Event Coordinator" },
   { userId: "EMP1002", password: "staff123", label: "Staff" },
-  { userId: "STU2001", password: "student123", label: "Student" },
 ];
 
 export default function LoginPage() {
@@ -70,64 +69,66 @@ export default function LoginPage() {
 
       <div className="flame-login-content">
         <div className="flame-login-card">
-          <div className="flame-login-card-accent" aria-hidden />
-
           <div className="flame-login-card-header">
             <FlameLogo size="login" centered className="mx-auto" />
-            <h1 className="flame-login-title">FLAME Biometric</h1>
-            <p className="flame-login-subtitle">Centralized Attendance System</p>
+            <div className="flame-login-card-heading">
+              <h1 className="flame-login-title">FLAME Biometric</h1>
+              <p className="flame-login-subtitle">Centralized Attendance System</p>
+            </div>
           </div>
 
-          <form onSubmit={handleLogin} className="flame-login-form">
-            {error && <Alert message={error} />}
+          <div className="flame-login-card-body">
+            <form onSubmit={handleLogin} className="flame-login-form">
+              {error && <Alert message={error} />}
 
-            <FormField label="User ID" htmlFor="userId">
-              <Input
-                id="userId"
-                type="text"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-                placeholder="e.g. ADMIN001"
-                autoComplete="username"
-                required
-              />
-            </FormField>
+              <FormField label="User ID" htmlFor="userId">
+                <Input
+                  id="userId"
+                  type="text"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  placeholder="e.g. ADMIN001"
+                  autoComplete="username"
+                  required
+                />
+              </FormField>
 
-            <FormField label="Password" htmlFor="password">
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                autoComplete="current-password"
-                required
-              />
-            </FormField>
+              <FormField label="Password" htmlFor="password">
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  required
+                />
+              </FormField>
 
-            <Button type="submit" disabled={loading} className="w-full flame-login-submit">
-              {loading ? "Signing in..." : "Sign In"}
-            </Button>
+              <Button type="submit" disabled={loading} className="w-full flame-login-submit">
+                {loading ? "Signing in..." : "Sign In"}
+              </Button>
 
-            <div className="flame-login-demo">
-              <p className="flame-login-demo-label">Quick demo access</p>
-              <div className="flame-login-demo-grid">
-                {DEMO_ACCOUNTS.map((a) => (
-                  <button
-                    key={a.userId}
-                    type="button"
-                    onClick={() => {
-                      setUserId(a.userId);
-                      setPassword(a.password);
-                    }}
-                    className="flame-login-demo-btn"
-                  >
-                    {a.label}
-                  </button>
-                ))}
+              <div className="flame-login-demo">
+                <p className="flame-login-demo-label">Quick demo access</p>
+                <div className="flame-login-demo-grid">
+                  {DEMO_ACCOUNTS.map((a) => (
+                    <button
+                      key={a.userId}
+                      type="button"
+                      onClick={() => {
+                        setUserId(a.userId);
+                        setPassword(a.password);
+                      }}
+                      className="flame-login-demo-btn"
+                    >
+                      {a.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
 
         <p className="flame-login-footer">FLAME University · Biometric Attendance Portal</p>
