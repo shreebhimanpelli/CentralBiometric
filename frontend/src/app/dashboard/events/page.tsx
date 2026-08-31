@@ -6,29 +6,55 @@ import { DashboardPage } from "@/components/dashboard/DashboardPage";
 import { ContentPanel } from "@/components/dashboard/ContentPanel";
 import { EventCard } from "@/components/dashboard/EventCard";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FormField, Input, Button } from "@/components/ui/Form";
+import { FormField, Input, Select, Button } from "@/components/ui/Form";
 import { DateTimePicker } from "@/components/ui/DateTimePicker";
 
 interface Event {
   id: string;
   name: string;
   description: string | null;
+  venue: string | null;
+  deviceId: string | null;
   startTime: string;
   endTime: string;
   department: { name: string; code: string };
   coordinators: { user: { name: string } }[];
-  _count?: { attendance: number };
+  _count?: { attendance: number; enrollments: number };
 }
 
-const EMPTY_EVENT_FORM = { name: "", description: "", startTime: "", endTime: "" };
+interface Department {
+  id: string;
+  name: string;
+  code: string;
+}
+
+const EMPTY_EVENT_FORM = {
+  name: "",
+  description: "",
+  venue: "",
+  deviceId: "",
+  batch: "",
+  startTime: "",
+  endTime: "",
+  departmentId: "",
+};
 
 export default function EventsPage() {
+  const auth = getStoredAuth();
+  const role = auth?.user.role as Role;
+  const userDeptId = auth?.user.department?.id ?? "";
+
   const [events, setEvents] = useState<Event[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [devices, setDevices] = useState<string[]>([]);
+  const [batches, setBatches] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_EVENT_FORM);
   const [error, setError] = useState("");
-  const role = getStoredAuth()?.user.role as Role;
+
+  const isAdmin = role === "ADMIN";
+  const lockDepartment = !isAdmin && Boolean(userDeptId);
 
   function loadEvents() {
     apiFetch<Event[]>("/api/events")
@@ -37,9 +63,32 @@ export default function EventsPage() {
       .finally(() => setLoading(false));
   }
 
+  function loadBatches(departmentId: string) {
+    if (!departmentId) {
+      setBatches([]);
+      return;
+    }
+    apiFetch<string[]>(`/api/events/batches?departmentId=${departmentId}`)
+      .then(setBatches)
+      .catch(() => setBatches([]));
+  }
+
   useEffect(() => {
     loadEvents();
+    apiFetch<Department[]>("/api/departments").then(setDepartments).catch(() => {});
+    apiFetch<string[]>("/api/events/devices").then(setDevices).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    loadBatches(form.departmentId || userDeptId);
+  }, [form.departmentId, userDeptId]);
+
+  function openForm() {
+    const departmentId = lockDepartment ? userDeptId : "";
+    setForm({ ...EMPTY_EVENT_FORM, departmentId });
+    if (departmentId) loadBatches(departmentId);
+    setShowForm(true);
+  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -50,8 +99,12 @@ export default function EventsPage() {
         body: JSON.stringify({
           name: form.name,
           description: form.description || undefined,
+          venue: form.venue || undefined,
+          deviceId: form.deviceId || undefined,
+          batch: form.batch || undefined,
           startTime: new Date(form.startTime).toISOString(),
           endTime: new Date(form.endTime).toISOString(),
+          departmentId: form.departmentId || undefined,
         }),
       });
       setShowForm(false);
@@ -74,14 +127,7 @@ export default function EventsPage() {
         canManageEvents(role) ? (
           <Button
             type="button"
-            onClick={() => {
-              if (showForm) {
-                setShowForm(false);
-              } else {
-                setForm(EMPTY_EVENT_FORM);
-                setShowForm(true);
-              }
-            }}
+            onClick={() => (showForm ? setShowForm(false) : openForm())}
             className="w-full sm:w-auto"
           >
             {showForm ? "Cancel" : "Create Event"}
@@ -109,6 +155,69 @@ export default function EventsPage() {
                 />
               </FormField>
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField label="Department" htmlFor="event-department">
+                <Select
+                  id="event-department"
+                  value={form.departmentId}
+                  onChange={(e) => setForm({ ...form, departmentId: e.target.value, batch: "" })}
+                  disabled={lockDepartment}
+                  required={isAdmin}
+                >
+                  <option value="" disabled>
+                    Select department (e.g. Computer Science)
+                  </option>
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name} ({d.code})
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+
+              <FormField label="Venue" htmlFor="event-venue">
+                <Input
+                  id="event-venue"
+                  value={form.venue}
+                  onChange={(e) => setForm({ ...form, venue: e.target.value })}
+                  placeholder="e.g. Main Auditorium"
+                />
+              </FormField>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField label="Device ID" htmlFor="event-device">
+                <Select
+                  id="event-device"
+                  value={form.deviceId}
+                  onChange={(e) => setForm({ ...form, deviceId: e.target.value })}
+                >
+                  <option value="">Select device (e.g. DEV001)</option>
+                  {devices.map((id) => (
+                    <option key={id} value={id}>
+                      {id}
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+
+              <FormField label="Student Batch" htmlFor="event-batch">
+                <Select
+                  id="event-batch"
+                  value={form.batch}
+                  onChange={(e) => setForm({ ...form, batch: e.target.value })}
+                >
+                  <option value="">Map batch later (optional)</option>
+                  {batches.map((batch) => (
+                    <option key={batch} value={batch}>
+                      Batch {batch}
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+            </div>
+
             <div>
               <p className="flame-label mb-3">Schedule</p>
               <div className="flame-schedule-section">

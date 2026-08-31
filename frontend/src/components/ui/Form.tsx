@@ -23,6 +23,10 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={cn("flame-input", props.className)} />;
 }
 
+export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return <select {...props} className={cn("flame-select", props.className)} />;
+}
+
 export function Button({
   children,
   variant = "primary",

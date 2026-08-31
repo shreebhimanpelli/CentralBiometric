@@ -12,11 +12,12 @@ router.get("/", authenticate, requireRoles(Role.ADMIN, Role.HOD), async (req: Au
 
   const users = await prisma.user.findMany({
     where,
-    select: {
+      select: {
       id: true,
       userId: true,
       name: true,
       role: true,
+      batch: true,
       department: { select: { name: true, code: true } },
       createdAt: true,
     },

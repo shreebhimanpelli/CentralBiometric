@@ -8,10 +8,12 @@ export interface EventSummary {
   id: string;
   name: string;
   description: string | null;
+  venue?: string | null;
+  deviceId?: string | null;
   startTime: string;
   endTime: string;
   department: { name: string; code: string };
-  _count?: { attendance: number };
+  _count?: { attendance: number; enrollments: number };
 }
 
 function eventStatus(start: string, end: string) {
@@ -25,6 +27,8 @@ function eventStatus(start: string, end: string) {
 
 export function EventCard({ event }: { event: EventSummary }) {
   const status = eventStatus(event.startTime, event.endTime);
+  const enrolled = event._count?.enrollments ?? 0;
+  const present = event._count?.attendance ?? 0;
 
   return (
     <ContentPanel noPadding>
@@ -41,19 +45,23 @@ export function EventCard({ event }: { event: EventSummary }) {
             <p className="flame-text-muted">
               {event.department.name} ({event.department.code})
             </p>
+            {event.venue && (
+              <p className="flame-text-muted mt-1">Venue: {event.venue}</p>
+            )}
+            {event.deviceId && (
+              <p className="flame-text-muted mt-1">Device: {event.deviceId}</p>
+            )}
             <p className="flame-text-muted mt-1">
               {formatDate(event.startTime)} — {formatDate(event.endTime)}
             </p>
           </div>
           <div className="flex sm:flex-col items-center sm:items-end justify-between gap-3 pt-3 sm:pt-0 border-t sm:border-t-0 border-[var(--border)] shrink-0">
-            {event._count !== undefined && (
-              <div className="text-center sm:text-right">
-                <p className="text-2xl font-headline font-bold text-flame-blue">
-                  {event._count.attendance}
-                </p>
-                <p className="flame-text-small">attendees</p>
-              </div>
-            )}
+            <div className="text-center sm:text-right">
+              <p className="text-2xl font-headline font-bold text-flame-blue">
+                {present}/{enrolled}
+              </p>
+              <p className="flame-text-small">present / enrolled</p>
+            </div>
             <Link href={`/dashboard/events/${event.id}`}>
               <Button variant="secondary" className="w-full sm:w-auto">
                 View Attendance

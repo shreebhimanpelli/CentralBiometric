@@ -123,3 +123,27 @@ export function canManageEvents(role: Role) {
 export function canViewEventAttendance(role: Role) {
   return ["ADMIN", "HOD", "EVENT_COORDINATOR", "STUDENT"].includes(role);
 }
+
+export async function downloadApiExport(path: string, filename: string) {
+  const auth = getStoredAuth();
+  const headers: Record<string, string> = {};
+  if (auth?.accessToken) {
+    headers.Authorization = `Bearer ${auth.accessToken}`;
+  }
+
+  const res = await fetch(`${API_BASE}${path}`, { headers });
+  if (!res.ok) {
+    const err = await parseApiResponse<{ error?: string }>(res).catch((e) => ({
+      error: e instanceof Error ? e.message : "Export failed",
+    }));
+    throw new Error(err.error || "Export failed");
+  }
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}

@@ -31,12 +31,16 @@ model User {
   name              String
   role              Role
   departmentId      String?
+  batch             String?
   department        Department?        @relation(fields: [departmentId], references: [id])
   punchLogs         PunchLog[]
   eventAttendance   EventAttendance[]
+  eventEnrollments  EventEnrollment[]
   coordinatedEvents EventCoordinator[]
   refreshTokens     RefreshToken[]
   createdAt         DateTime           @default(now())
+
+  @@index([departmentId, batch, role])
 }
 
 model PunchLog {
@@ -57,15 +61,31 @@ model Event {
   id           String             @id @default(cuid())
   name         String
   description  String?
+  venue        String?
+  deviceId     String?
   startTime    DateTime
   endTime      DateTime
   departmentId String
   department   Department         @relation(fields: [departmentId], references: [id])
   coordinators EventCoordinator[]
+  enrollments  EventEnrollment[]
   attendance   EventAttendance[]
   createdAt    DateTime           @default(now())
 
   @@index([departmentId, startTime])
+}
+
+model EventEnrollment {
+  id      String   @id @default(cuid())
+  eventId String
+  userId  String
+  batch   String?
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, userId])
+  @@index([eventId])
 }
 
 model EventCoordinator {
@@ -83,6 +103,7 @@ model EventAttendance {
   eventId   String
   userId    String
   punchTime DateTime
+  deviceId  String?
   esslLogId String?  @unique
   event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id])
@@ -90,6 +111,7 @@ model EventAttendance {
 
   @@index([eventId, punchTime])
   @@index([userId])
+  @@index([eventId, deviceId])
 }
 
 model RefreshToken {

@@ -12,6 +12,7 @@ interface UserRow {
   userId: string;
   name: string;
   role: Role;
+  batch: string | null;
   department: { name: string; code: string } | null;
 }
 
@@ -51,18 +52,23 @@ export default function UsersPage() {
               }
             >
               <DataField
+                label="Batch"
+                value={u.batch ?? "—"}
+              />
+              <DataField
                 label="Department"
                 value={u.department ? `${u.department.name} (${u.department.code})` : "—"}
               />
             </MobileCard>
           ))}
           desktop={
-            <DataTable columns={["Name", "User ID", "Role", "Department"]}>
+            <DataTable columns={["Name", "User ID", "Role", "Batch", "Department"]}>
               {users.map((u) => (
                 <tr key={u.id}>
                   <td className="font-medium">{u.name}</td>
                   <td className="text-[var(--muted)]">{u.userId}</td>
                   <td><Badge variant="blue">{roleLabel(u.role)}</Badge></td>
+                  <td className="text-[var(--muted)]">{u.batch ?? "—"}</td>
                   <td className="text-[var(--muted)]">
                     {u.department ? `${u.department.name} (${u.department.code})` : "—"}
                   </td>

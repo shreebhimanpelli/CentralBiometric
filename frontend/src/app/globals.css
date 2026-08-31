@@ -331,6 +331,51 @@ h1, h2, h3, h4 {
   opacity: 1;
 }
 
+.flame-select {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 2.25rem 0.5rem 0.875rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  font-size: var(--text-base);
+  color: #1a2e3f;
+  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235a6f82' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 0.75rem center;
+  appearance: none;
+  cursor: pointer;
+}
+
+.flame-select:focus {
+  outline: none;
+  border-color: var(--flame-blue);
+  box-shadow: 0 0 0 3px rgba(10, 69, 111, 0.15);
+}
+
+.flame-select:invalid,
+.flame-select option[value=""] {
+  color: var(--muted);
+}
+
+.flame-filter-bar {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--flame-blue-soft) 0%, #fff 100%);
+}
+
+@media (min-width: 640px) {
+  .flame-filter-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .flame-filter-bar {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 .flame-label {
   display: block;
   font-size: var(--text-base);

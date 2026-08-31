@@ -6,9 +6,91 @@ import { canViewStaffPunches } from "../utils/permissions";
 
 const router = Router();
 
+type PunchRecord = {
+  id: string;
+  recordType: "staff" | "event";
+  punchTime: Date;
+  direction: string | null;
+  deviceId: string | null;
+  department: { code: string; name: string } | null;
+  event: { id: string; name: string } | null;
+  user: { userId: string; name: string; role?: string };
+};
+
+function formatStaffRecord(
+  punch: {
+    id: string;
+    punchTime: Date;
+    direction: string | null;
+    deviceId: string | null;
+    user: {
+      userId: string;
+      name: string;
+      role?: string;
+      department: { code: string; name: string } | null;
+    };
+  }
+): PunchRecord {
+  return {
+    id: punch.id,
+    recordType: "staff",
+    punchTime: punch.punchTime,
+    direction: punch.direction,
+    deviceId: punch.deviceId,
+    department: punch.user.department,
+    event: null,
+    user: {
+      userId: punch.user.userId,
+      name: punch.user.name,
+      role: punch.user.role,
+    },
+  };
+}
+
+function formatEventRecord(
+  record: {
+    id: string;
+    punchTime: Date;
+    deviceId: string | null;
+    user: { userId: string; name: string; role?: string };
+    event: {
+      id: string;
+      name: string;
+      department: { code: string; name: string };
+    };
+  }
+): PunchRecord {
+  return {
+    id: record.id,
+    recordType: "event",
+    punchTime: record.punchTime,
+    direction: "IN",
+    deviceId: record.deviceId,
+    department: record.event.department,
+    event: { id: record.event.id, name: record.event.name },
+    user: {
+      userId: record.user.userId,
+      name: record.user.name,
+      role: record.user.role,
+    },
+  };
+}
+
+function resolveDepartmentId(user: NonNullable<AuthRequest["user"]>, requested?: string) {
+  if (user.role === Role.HOD && user.departmentId) return user.departmentId;
+  return requested || undefined;
+}
+
 router.get("/", authenticate, async (req: AuthRequest, res) => {
   const user = req.user!;
-  const { from, to, userId: filterUserId } = req.query;
+  const {
+    from,
+    to,
+    userId: filterUserId,
+    departmentId: requestedDepartmentId,
+    deviceId,
+    eventId,
+  } = req.query;
 
   if (user.role === Role.STAFF) {
     const punches = await prisma.punchLog.findMany({
@@ -23,46 +105,152 @@ router.get("/", authenticate, async (req: AuthRequest, res) => {
             }
           : {}),
       },
-      include: { user: { select: { userId: true, name: true } } },
+      include: {
+        user: {
+          select: {
+            userId: true,
+            name: true,
+            department: { select: { name: true, code: true } },
+          },
+        },
+      },
       orderBy: { punchTime: "desc" },
       take: 200,
     });
-    return res.json(punches);
+    return res.json(punches.map((p) => formatStaffRecord({ ...p, user: { ...p.user, role: "STAFF" } })));
   }
 
   if (!canViewStaffPunches(user)) {
-    return res.status(403).json({ error: "No access to staff punches" });
+    return res.status(403).json({ error: "No access to punch records" });
   }
 
-  const where: Record<string, unknown> = {};
+  const departmentId = resolveDepartmentId(user, requestedDepartmentId as string | undefined);
+  const timeFilter =
+    from || to
+      ? {
+          punchTime: {
+            ...(from ? { gte: new Date(from as string) } : {}),
+            ...(to ? { lte: new Date(to as string) } : {}),
+          },
+        }
+      : {};
 
-  if (user.role === Role.HOD && user.departmentId) {
-    where.user = { departmentId: user.departmentId, role: { in: [Role.STAFF, Role.HOD] } };
+  if (eventId) {
+    const event = await prisma.event.findUnique({
+      where: { id: String(eventId) },
+      include: { department: true },
+    });
+
+    if (!event) return res.status(404).json({ error: "Event not found" });
+    if (departmentId && event.departmentId !== departmentId) {
+      return res.status(400).json({ error: "Event does not belong to the selected department" });
+    }
+    if (user.role === Role.HOD && user.departmentId && event.departmentId !== user.departmentId) {
+      return res.status(403).json({ error: "No access to this event" });
+    }
+
+    const attendance = await prisma.eventAttendance.findMany({
+      where: {
+        eventId: String(eventId),
+        ...(deviceId ? { deviceId: String(deviceId) } : {}),
+        ...timeFilter,
+      },
+      include: {
+        user: { select: { userId: true, name: true, role: true } },
+        event: {
+          select: {
+            id: true,
+            name: true,
+            department: { select: { code: true, name: true } },
+          },
+        },
+      },
+      orderBy: { punchTime: "desc" },
+      take: 500,
+    });
+
+    return res.json(attendance.map(formatEventRecord));
   }
 
-  if (filterUserId) {
-    where.user = { ...(where.user as object), userId: filterUserId };
-  }
-
-  if (from || to) {
-    where.punchTime = {
-      ...(from ? { gte: new Date(from as string) } : {}),
-      ...(to ? { lte: new Date(to as string) } : {}),
-    };
-  }
+  const userWhere: Record<string, unknown> = { role: { in: [Role.STAFF, Role.HOD] } };
+  if (departmentId) userWhere.departmentId = departmentId;
+  if (filterUserId) userWhere.userId = filterUserId;
 
   const punches = await prisma.punchLog.findMany({
-    where,
+    where: {
+      ...(deviceId ? { deviceId: String(deviceId) } : {}),
+      ...timeFilter,
+      user: userWhere,
+    },
     include: {
       user: {
-        select: { userId: true, name: true, role: true, department: { select: { name: true, code: true } } },
+        select: {
+          userId: true,
+          name: true,
+          role: true,
+          department: { select: { name: true, code: true } },
+        },
       },
     },
     orderBy: { punchTime: "desc" },
     take: 500,
   });
 
-  return res.json(punches);
+  return res.json(punches.map(formatStaffRecord));
+});
+
+router.get("/devices", authenticate, async (req: AuthRequest, res) => {
+  const user = req.user!;
+
+  if (!canViewStaffPunches(user)) {
+    return res.status(403).json({ error: "No access" });
+  }
+
+  const departmentId = resolveDepartmentId(user, req.query.departmentId as string | undefined);
+  const eventId = req.query.eventId as string | undefined;
+  const devices = new Set<string>();
+
+  if (eventId) {
+    const event = await prisma.event.findUnique({ where: { id: eventId } });
+    if (event?.deviceId) devices.add(event.deviceId);
+
+    const rows = await prisma.eventAttendance.findMany({
+      where: { eventId, deviceId: { not: null } },
+      distinct: ["deviceId"],
+      select: { deviceId: true },
+    });
+    rows.forEach((r) => r.deviceId && devices.add(r.deviceId));
+
+    return res.json([...devices].sort());
+  }
+
+  const staffWhere: Record<string, unknown> = {
+    deviceId: { not: null },
+    user: { role: { in: [Role.STAFF, Role.HOD] } },
+  };
+  if (departmentId) {
+    (staffWhere.user as Record<string, unknown>).departmentId = departmentId;
+  } else if (user.role === Role.HOD && user.departmentId) {
+    (staffWhere.user as Record<string, unknown>).departmentId = user.departmentId;
+  }
+
+  const staffDevices = await prisma.punchLog.findMany({
+    where: staffWhere,
+    distinct: ["deviceId"],
+    select: { deviceId: true },
+  });
+  staffDevices.forEach((r) => r.deviceId && devices.add(r.deviceId));
+
+  if (departmentId) {
+    const eventDevices = await prisma.event.findMany({
+      where: { departmentId, deviceId: { not: null } },
+      distinct: ["deviceId"],
+      select: { deviceId: true },
+    });
+    eventDevices.forEach((r) => r.deviceId && devices.add(r.deviceId));
+  }
+
+  return res.json([...devices].sort());
 });
 
 router.get("/summary", authenticate, async (req: AuthRequest, res) => {
