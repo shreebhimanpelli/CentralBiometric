@@ -2,6 +2,7 @@ import { cn } from "@/lib/cn";
 import { Select } from "@/components/ui/Select";
 
 export { Select };
+export { MultiSelect } from "@/components/ui/MultiSelect";
 
 export function FormField({
   label,

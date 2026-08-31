@@ -3,6 +3,7 @@ import { Role } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { authenticate, AuthRequest } from "../middleware/auth";
 import { canViewStaffPunches } from "../utils/permissions";
+import { parseDeviceIds } from "../utils/devices";
 
 const router = Router();
 
@@ -212,7 +213,7 @@ router.get("/devices", authenticate, async (req: AuthRequest, res) => {
 
   if (eventId) {
     const event = await prisma.event.findUnique({ where: { id: eventId } });
-    if (event?.deviceId) devices.add(event.deviceId);
+    parseDeviceIds(event?.deviceIds).forEach((id) => devices.add(id));
 
     const rows = await prisma.eventAttendance.findMany({
       where: { eventId, deviceId: { not: null } },
@@ -242,12 +243,13 @@ router.get("/devices", authenticate, async (req: AuthRequest, res) => {
   staffDevices.forEach((r) => r.deviceId && devices.add(r.deviceId));
 
   if (departmentId) {
-    const eventDevices = await prisma.event.findMany({
-      where: { departmentId, deviceId: { not: null } },
-      distinct: ["deviceId"],
-      select: { deviceId: true },
+    const deptEvents = await prisma.event.findMany({
+      where: { departmentId },
+      select: { deviceIds: true },
     });
-    eventDevices.forEach((r) => r.deviceId && devices.add(r.deviceId));
+    deptEvents.forEach((row) => {
+      parseDeviceIds(row.deviceIds).forEach((id) => devices.add(id));
+    });
   }
 
   return res.json([...devices].sort());

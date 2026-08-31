@@ -62,7 +62,7 @@ model Event {
   name         String
   description  String?
   venue        String?
-  deviceId     String?
+  deviceIds    Json     @default("[]")
   startTime    DateTime
   endTime      DateTime
   departmentId String

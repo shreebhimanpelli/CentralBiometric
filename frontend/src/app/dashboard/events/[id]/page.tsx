@@ -10,6 +10,7 @@ import {
   type Role,
 } from "@/lib/api";
 import { formatDate } from "@/lib/format";
+import { formatDeviceIds } from "@/lib/devices";
 import { DashboardPage } from "@/components/dashboard/DashboardPage";
 import { ContentPanel } from "@/components/dashboard/ContentPanel";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -32,7 +33,7 @@ interface RosterResponse {
     id: string;
     name: string;
     venue: string | null;
-    deviceId: string | null;
+    deviceIds: string[];
     department: { id: string; name: string; code: string };
     startTime: string;
     endTime: string;
@@ -70,7 +71,14 @@ export default function EventDetailPage() {
   }, [loadRoster]);
 
   useEffect(() => {
+    if (data?.event?.deviceIds?.length) {
+      setDevices(data.event.deviceIds);
+      return;
+    }
     apiFetch<string[]>("/api/events/devices").then(setDevices).catch(() => {});
+  }, [data?.event?.deviceIds]);
+
+  useEffect(() => {
     if (data?.event?.department?.id) {
       apiFetch<string[]>(`/api/events/batches?departmentId=${data.event.department.id}`)
         .then(setBatches)
@@ -102,7 +110,7 @@ export default function EventDetailPage() {
         method: "POST",
         body: JSON.stringify({
           userId: studentId,
-          deviceId: data?.event.deviceId || undefined,
+          deviceId: data?.event.deviceIds?.[0] || undefined,
         }),
       });
       setStudentId("");
@@ -137,7 +145,7 @@ export default function EventDetailPage() {
       title={event?.name ?? "Event Attendance"}
       description={
         event
-          ? `${event.department.name} · ${event.venue ?? "Venue TBD"} · Device ${event.deviceId ?? "—"}`
+          ? `${event.department.name} · ${event.venue ?? "Venue TBD"} · Devices ${formatDeviceIds(event.deviceIds)}`
           : "Loading event details..."
       }
       backHref="/dashboard/events"

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { authenticate, AuthRequest } from "../middleware/auth";
 import { canManageEvents, canViewStudentAttendance } from "../utils/permissions";
+import { formatDeviceIds, parseDeviceIds } from "../utils/devices";
 
 const router = Router();
 
@@ -11,6 +12,7 @@ const eventSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
   venue: z.string().optional(),
+  deviceIds: z.array(z.string()).optional(),
   deviceId: z.string().optional(),
   startTime: z.string().datetime(),
   endTime: z.string().datetime(),
@@ -144,13 +146,13 @@ async function buildRoster(eventId: string, deviceId?: string) {
 
 function rosterToCsv(
   rows: Awaited<ReturnType<typeof buildRoster>>,
-  meta: { eventName: string; venue: string | null; deviceId: string | null }
+  meta: { eventName: string; venue: string | null; deviceIds: string[] }
 ) {
-  const header = ["Event", "Venue", "Event Device", "Student ID", "Name", "Batch", "Status", "Punch Time", "Punch Device"];
+  const header = ["Event", "Venue", "Event Devices", "Student ID", "Name", "Batch", "Status", "Punch Time", "Punch Device"];
   const lines = rows.map((r) => [
     meta.eventName,
     meta.venue ?? "",
-    meta.deviceId ?? "",
+    formatDeviceIds(meta.deviceIds),
     r.userId,
     r.name,
     r.batch ?? "",
@@ -261,9 +263,14 @@ router.post("/", authenticate, async (req: AuthRequest, res) => {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
 
-  const { name, description, venue, deviceId, startTime, endTime, departmentId, coordinatorIds, batch } =
+  const { name, description, venue, deviceIds, deviceId, startTime, endTime, departmentId, coordinatorIds, batch } =
     parsed.data;
   const deptId = departmentId || req.user!.departmentId;
+  const normalizedDeviceIds = deviceIds?.length
+    ? deviceIds
+    : deviceId
+      ? [deviceId]
+      : [];
 
   if (!deptId) {
     return res.status(400).json({ error: "Department required" });
@@ -274,7 +281,7 @@ router.post("/", authenticate, async (req: AuthRequest, res) => {
       name,
       description,
       venue,
-      deviceId,
+      deviceIds: normalizedDeviceIds,
       startTime: new Date(startTime),
       endTime: new Date(endTime),
       departmentId: deptId,
@@ -336,13 +343,14 @@ router.get("/:id/roster", authenticate, async (req: AuthRequest, res) => {
 
   const roster = await buildRoster(eventId, deviceId);
   const present = roster.filter((r) => r.status === "present").length;
+  const eventDeviceIds = parseDeviceIds(event.deviceIds);
 
   return res.json({
     event: {
       id: event.id,
       name: event.name,
       venue: event.venue,
-      deviceId: event.deviceId,
+      deviceIds: eventDeviceIds,
       department: {
         id: event.department.id,
         name: event.department.name,
@@ -377,7 +385,7 @@ router.get("/:id/roster/export", authenticate, async (req: AuthRequest, res: Res
   const csv = rosterToCsv(roster, {
     eventName: event.name,
     venue: event.venue,
-    deviceId: event.deviceId,
+    deviceIds: parseDeviceIds(event.deviceIds),
   });
 
   const suffix = deviceId ? `-${deviceId}` : "";
@@ -458,7 +466,10 @@ router.post("/:id/attendance", authenticate, async (req: AuthRequest, res) => {
       eventId,
       userId: targetUser.id,
       punchTime: parsed.data.punchTime ? new Date(parsed.data.punchTime) : new Date(),
-      deviceId: parsed.data.deviceId || event.deviceId || null,
+      deviceId:
+        parsed.data.deviceId ||
+        parseDeviceIds(event.deviceIds)[0] ||
+        null,
     },
     include: { user: { select: { userId: true, name: true, batch: true } } },
   });

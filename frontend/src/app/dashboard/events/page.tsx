@@ -6,7 +6,7 @@ import { DashboardPage } from "@/components/dashboard/DashboardPage";
 import { ContentPanel } from "@/components/dashboard/ContentPanel";
 import { EventCard } from "@/components/dashboard/EventCard";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FormField, Input, Select, Button } from "@/components/ui/Form";
+import { FormField, Input, Select, MultiSelect, Button } from "@/components/ui/Form";
 import { DateTimePicker } from "@/components/ui/DateTimePicker";
 
 interface Event {
@@ -14,7 +14,7 @@ interface Event {
   name: string;
   description: string | null;
   venue: string | null;
-  deviceId: string | null;
+  deviceIds: string[];
   startTime: string;
   endTime: string;
   department: { name: string; code: string };
@@ -32,7 +32,7 @@ const EMPTY_EVENT_FORM = {
   name: "",
   description: "",
   venue: "",
-  deviceId: "",
+  deviceIds: [] as string[],
   batch: "",
   startTime: "",
   endTime: "",
@@ -100,7 +100,7 @@ export default function EventsPage() {
           name: form.name,
           description: form.description || undefined,
           venue: form.venue || undefined,
-          deviceId: form.deviceId || undefined,
+          deviceIds: form.deviceIds.length ? form.deviceIds : undefined,
           batch: form.batch || undefined,
           startTime: new Date(form.startTime).toISOString(),
           endTime: new Date(form.endTime).toISOString(),
@@ -188,18 +188,18 @@ export default function EventsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField label="Device ID" htmlFor="event-device">
-                <Select
+                <MultiSelect
                   id="event-device"
-                  value={form.deviceId}
-                  onChange={(e) => setForm({ ...form, deviceId: e.target.value })}
+                  value={form.deviceIds}
+                  onChange={(deviceIds) => setForm({ ...form, deviceIds })}
+                  placeholder="Select devices (e.g. DEV001)"
                 >
-                  <option value="">Select device (e.g. DEV001)</option>
                   {devices.map((id) => (
                     <option key={id} value={id}>
                       {id}
                     </option>
                   ))}
-                </Select>
+                </MultiSelect>
               </FormField>
 
               <FormField label="Student Batch" htmlFor="event-batch">

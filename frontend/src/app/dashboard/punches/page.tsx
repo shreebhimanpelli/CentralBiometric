@@ -31,7 +31,7 @@ interface EventOption {
   id: string;
   name: string;
   startTime: string;
-  deviceId: string | null;
+  deviceIds?: string[];
 }
 
 function DirectionBadge({ direction }: { direction: string | null }) {
@@ -185,7 +185,7 @@ export default function PunchesPage() {
               {events.map((ev) => (
                 <option key={ev.id} value={ev.id}>
                   {ev.name}
-                  {ev.deviceId ? ` · ${ev.deviceId}` : ""}
+                  {ev.deviceIds?.length ? ` · ${ev.deviceIds.join(", ")}` : ""}
                 </option>
               ))}
             </Select>

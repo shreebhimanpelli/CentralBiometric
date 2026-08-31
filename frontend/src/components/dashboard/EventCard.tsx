@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatDate } from "@/lib/format";
+import { formatDeviceIds } from "@/lib/devices";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Form";
 import { ContentPanel } from "@/components/dashboard/ContentPanel";
@@ -9,7 +10,7 @@ export interface EventSummary {
   name: string;
   description: string | null;
   venue?: string | null;
-  deviceId?: string | null;
+  deviceIds?: string[];
   startTime: string;
   endTime: string;
   department: { name: string; code: string };
@@ -48,8 +49,8 @@ export function EventCard({ event }: { event: EventSummary }) {
             {event.venue && (
               <p className="flame-text-muted mt-1">Venue: {event.venue}</p>
             )}
-            {event.deviceId && (
-              <p className="flame-text-muted mt-1">Device: {event.deviceId}</p>
+            {(event.deviceIds?.length ?? 0) > 0 && (
+              <p className="flame-text-muted mt-1">Devices: {formatDeviceIds(event.deviceIds)}</p>
             )}
             <p className="flame-text-muted mt-1">
               {formatDate(event.startTime)} — {formatDate(event.endTime)}

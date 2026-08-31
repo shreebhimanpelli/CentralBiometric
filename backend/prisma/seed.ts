@@ -66,14 +66,14 @@ async function main() {
     where: { id: "seed-tech-fest" },
     update: {
       venue: "Main Auditorium",
-      deviceId: "DEV001",
+      deviceIds: ["DEV001", "DEV002"],
     },
     create: {
       id: "seed-tech-fest",
       name: "CS Tech Fest 2026",
       description: "Annual technical festival for CS department",
       venue: "Main Auditorium",
-      deviceId: "DEV001",
+      deviceIds: ["DEV001", "DEV002"],
       startTime: eventStart,
       endTime: eventEnd,
       departmentId: csDept.id,
@@ -101,15 +101,20 @@ async function main() {
     });
   }
 
+  const hod = await prisma.user.findUnique({ where: { userId: "EMP1001" } });
+
   const punchTimes = [
     { user: staff, time: new Date(eventStart.getTime() + 8 * 3600000), direction: "IN", device: "DEV001" },
     { user: staff, time: new Date(eventStart.getTime() + 16 * 3600000), direction: "OUT", device: "DEV001" },
-    {
-      user: await prisma.user.findUnique({ where: { userId: "EMP1001" } }),
-      time: new Date(eventStart.getTime() + 7.5 * 3600000),
-      direction: "IN",
-      device: "DEV002",
-    },
+    { user: hod, time: new Date(eventStart.getTime() + 7.5 * 3600000), direction: "IN", device: "DEV002" },
+    { user: staff, time: new Date(eventStart.getTime() + 8.5 * 3600000), direction: "IN", device: "DEV003" },
+    { user: hod, time: new Date(eventStart.getTime() + 9 * 3600000), direction: "IN", device: "DEV004" },
+    { user: staff, time: new Date(eventStart.getTime() + 9.5 * 3600000), direction: "OUT", device: "DEV005" },
+    { user: hod, time: new Date(eventStart.getTime() + 10 * 3600000), direction: "IN", device: "DEV006" },
+    { user: staff, time: new Date(eventStart.getTime() + 10.5 * 3600000), direction: "IN", device: "DEV007" },
+    { user: hod, time: new Date(eventStart.getTime() + 11 * 3600000), direction: "IN", device: "DEV008" },
+    { user: staff, time: new Date(eventStart.getTime() + 11.5 * 3600000), direction: "IN", device: "DEV009" },
+    { user: hod, time: new Date(eventStart.getTime() + 12 * 3600000), direction: "IN", device: "DEV010" },
   ];
 
   for (const [i, p] of punchTimes.entries()) {
