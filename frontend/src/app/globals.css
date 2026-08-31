@@ -241,6 +241,57 @@ h1, h2, h3, h4 {
   padding: 1rem 1.25rem;
 }
 
+.flame-stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.flame-stat-card-label {
+  padding: 0.875rem 1.125rem;
+  border-bottom: 1px solid var(--border);
+  border-left: 3px solid var(--flame-blue);
+  background: linear-gradient(90deg, var(--flame-blue-soft) 0%, transparent 100%);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--flame-blue);
+  line-height: 1.3;
+}
+
+.flame-stat-card-value {
+  padding: 1rem 1.125rem 1.125rem;
+  font-family: var(--font-headline);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  color: var(--flame-blue);
+  line-height: 1.2;
+}
+
+.flame-stat-card-gold .flame-stat-card-label {
+  border-left-color: var(--flame-gold);
+  background: linear-gradient(90deg, rgba(253, 181, 21, 0.14) 0%, transparent 100%);
+  color: #8a6200;
+}
+
+.flame-stat-card-orange .flame-stat-card-label {
+  border-left-color: var(--flame-orange);
+  background: linear-gradient(90deg, var(--flame-orange-soft) 0%, transparent 100%);
+  color: #a34d08;
+}
+
+.flame-stat-card-green .flame-stat-card-label {
+  border-left-color: #16a34a;
+  background: linear-gradient(90deg, rgba(22, 163, 74, 0.1) 0%, transparent 100%);
+  color: #15803d;
+}
+
+.flame-stat-card-blue .flame-stat-card-label {
+  border-left-color: var(--flame-blue);
+  background: linear-gradient(90deg, var(--flame-blue-soft) 0%, transparent 100%);
+  color: var(--flame-blue);
+}
+
 .flame-section {
   display: flex;
   flex-direction: column;
@@ -331,17 +382,41 @@ h1, h2, h3, h4 {
   opacity: 1;
 }
 
+.flame-input:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background: #f4f7fa;
+  color: var(--muted);
+}
+
+/* Form dropdown — closed state matches native .flame-select; menu options are custom-styled */
+.flame-select-wrap {
+  position: relative;
+  width: 100%;
+}
+
 .flame-select {
+  display: flex;
+  align-items: center;
   width: 100%;
   min-height: 2.75rem;
   padding: 0.5rem 2.25rem 0.5rem 0.875rem;
   border-radius: 0.5rem;
   border: 1px solid var(--border);
   font-size: var(--text-base);
+  font-family: inherit;
+  font-weight: 400;
+  line-height: 1.35;
+  text-align: left;
   color: #1a2e3f;
-  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235a6f82' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 0.75rem center;
-  appearance: none;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235a6f82' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 0.75rem center;
   cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.flame-select-value {
+  flex: 1;
+  min-width: 0;
 }
 
 .flame-select:focus {
@@ -350,9 +425,70 @@ h1, h2, h3, h4 {
   box-shadow: 0 0 0 3px rgba(10, 69, 111, 0.15);
 }
 
-.flame-select:invalid,
-.flame-select option[value=""] {
+.flame-select:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background-color: #f4f7fa;
   color: var(--muted);
+}
+
+.flame-select-placeholder {
+  color: var(--muted);
+}
+
+.flame-select-wrap.is-open .flame-select {
+  border-color: var(--flame-blue);
+  box-shadow: 0 0 0 3px rgba(10, 69, 111, 0.15);
+}
+
+.flame-select-menu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  max-height: 15rem;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  box-shadow: 0 8px 24px rgba(10, 69, 111, 0.14);
+}
+
+.flame-select-option {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: #fff;
+  color: #1a2e3f;
+  font-size: var(--text-base);
+  font-family: inherit;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.flame-select-option:hover {
+  background: #fff4e6;
+  color: #7c2d12;
+}
+
+.flame-select-option.is-selected {
+  background: #e6f0f7;
+  color: #0a456f;
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--flame-orange);
+}
+
+.flame-select-option.is-selected:hover {
+  background: #d6e6f2;
+  color: #083a5c;
 }
 
 .flame-filter-bar {
@@ -834,7 +970,7 @@ h1, h2, h3, h4 {
 .flame-datetime-select {
   flex: 1;
   min-height: 2.5rem;
-  padding: 0.375rem 0.625rem;
+  padding: 0.375rem 1.75rem 0.375rem 0.625rem;
   border-radius: 0.5rem;
   border: 1px solid var(--border);
   background: #fff;
@@ -847,7 +983,6 @@ h1, h2, h3, h4 {
   background-repeat: no-repeat;
   background-position: right 0.5rem center;
   background-size: 1rem;
-  padding-right: 1.75rem;
 }
 
 .flame-datetime-select:focus {

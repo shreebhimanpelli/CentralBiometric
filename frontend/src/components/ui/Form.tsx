@@ -1,4 +1,7 @@
 import { cn } from "@/lib/cn";
+import { Select } from "@/components/ui/Select";
+
+export { Select };
 
 export function FormField({
   label,
@@ -21,10 +24,6 @@ export function FormField({
 
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={cn("flame-input", props.className)} />;
-}
-
-export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className={cn("flame-select", props.className)} />;
 }
 
 export function Button({

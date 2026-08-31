@@ -37,7 +37,7 @@ export default function DashboardHomePage() {
       loading={loading}
       loadingMessage="Loading dashboard..."
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {(role === "ADMIN" || role === "HOD") && (
           <>
             <StatCard label="Staff Members" value={stats.staffCount ?? 0} accent="blue" />

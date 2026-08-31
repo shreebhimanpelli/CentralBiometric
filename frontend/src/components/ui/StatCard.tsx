@@ -1,8 +1,10 @@
+import { cn } from "@/lib/cn";
+
 const accents = {
-  blue: "text-flame-blue",
-  gold: "text-[#b8860b]",
-  orange: "text-flame-orange",
-  green: "text-green-700",
+  blue: "flame-stat-card-blue",
+  gold: "flame-stat-card-gold",
+  orange: "flame-stat-card-orange",
+  green: "flame-stat-card-green",
 } as const;
 
 export function StatCard({
@@ -15,10 +17,9 @@ export function StatCard({
   accent?: keyof typeof accents;
 }) {
   return (
-    <div className="flame-card p-4 relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-flame-orange via-flame-gold to-flame-blue opacity-80" />
-      <p className="flame-text-small mb-1 mt-1">{label}</p>
-      <p className={`text-3xl font-headline font-bold ${accents[accent]}`}>{value}</p>
+    <div className={cn("flame-stat-card", accents[accent])}>
+      <p className="flame-stat-card-label">{label}</p>
+      <p className="flame-stat-card-value">{value}</p>
     </div>
   );
 }
