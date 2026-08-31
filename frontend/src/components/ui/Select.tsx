@@ -58,8 +58,10 @@ export function Select({
   const [open, setOpen] = useState(false);
 
   const options = parseOptions(children);
-  const selectableOptions = options.filter((opt) => !opt.disabled);
-  const placeholder = options.find((opt) => opt.value === "" && opt.disabled);
+  const emptyOption = options.find((opt) => opt.value === "");
+  const menuOptions = options.filter(
+    (opt) => !(opt.value === "" && opt.disabled)
+  );
   const selected = options.find((opt) => opt.value === value);
   const isPlaceholder = value === "" || value === undefined;
 
@@ -116,14 +118,14 @@ export function Select({
         )}
       >
         <span className="flame-select-value truncate">
-          {isPlaceholder ? placeholder?.label ?? "Select…" : selected?.label}
+          {isPlaceholder ? emptyOption?.label ?? "Select…" : selected?.label}
         </span>
       </button>
 
       {open && !disabled && (
         <ul className="flame-select-menu" role="listbox" aria-labelledby={selectId}>
-          {selectableOptions.map((opt) => (
-            <li key={opt.value} role="presentation">
+          {menuOptions.map((opt) => (
+            <li key={opt.value || "__empty__"} role="presentation">
               <button
                 type="button"
                 role="option"
